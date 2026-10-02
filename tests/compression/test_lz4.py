@@ -90,9 +90,20 @@ def test_lz4_decompress_dictionary(lz4: ModuleType, data: str, dictionary: bytes
     assert isinstance(result, bytearray)
     assert result == expected
 
+    # The dictionary may be a bytearray too, such as the output accumulated so far
+    assert lz4.decompress(bytes.fromhex(data), dictionary=bytearray(dictionary)) == expected
+
     # Without its dictionary, the block refers back to data that is not there
     with pytest.raises((CorruptDataError, ValueError), match=r"[Oo]ffset"):
         lz4.decompress(bytes.fromhex(data))
+
+    # The same goes for a dictionary that does not reach back far enough
+    with pytest.raises((CorruptDataError, ValueError), match=r"[Oo]ffset"):
+        lz4.decompress(bytes.fromhex(data), dictionary=dictionary[-1:])
+
+    # The dictionary does not count towards the uncompressed size
+    with pytest.raises((CorruptDataError, ValueError), match=r"too small|exceeds"):
+        lz4.decompress(bytes.fromhex(data), len(expected) - 1, dictionary=dictionary)
 
 
 def test_lz4_decompress_chain(lz4: ModuleType) -> None:
