@@ -92,11 +92,14 @@ def decompress(
         if len(dst) + match_len > max_len > 0:
             raise CorruptDataError("Decompressed size exceeds uncompressed_size")
 
-        remaining = match_len
-        while remaining > 0:
-            match_size = min(remaining, offset)
-            dst += dst[-offset : (-offset + match_size) or None]
-            remaining -= match_size
+        if match_len <= offset:
+            dst += dst[-offset : (-offset + match_len) or None]
+        else:
+            # The match overlaps the output it produces, so it repeats the last offset bytes.
+            # Append those in bulk, growing dst at most twice instead of once per offset bytes.
+            chunk = dst[-offset:]
+            dst += chunk * (match_len // offset)
+            dst += chunk[: match_len % offset]
 
         if len(dst) >= max_len > 0:
             break
