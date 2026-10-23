@@ -81,6 +81,12 @@ def test_lz4_decompress(lz4: ModuleType, data: str, digest: str) -> None:
     assert hashlib.sha256(lz4.decompress(bytes.fromhex(data), dictionary=b"")).hexdigest() == digest
 
 
+@pytest.mark.parametrize("source_type", [bytes, bytearray, memoryview])
+def test_lz4_decompress_source_types(lz4: ModuleType, source_type: type) -> None:
+    data, digest = PARAMS[1][0].values
+    assert hashlib.sha256(lz4.decompress(source_type(bytes.fromhex(data)))).hexdigest() == digest
+
+
 @pytest.mark.parametrize(*DICTIONARY_PARAMS)
 def test_lz4_decompress_dictionary(lz4: ModuleType, data: str, dictionary: bytes, expected: bytes) -> None:
     assert lz4.decompress(bytes.fromhex(data), dictionary=dictionary) == expected
