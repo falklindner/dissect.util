@@ -2,6 +2,8 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyByteArray, PyBytes};
 
+use crate::buffer::Buffer;
+
 const MAX_DISCOVER_OUTPUT_SIZE: usize = 1024 * 1024 * 1024;
 
 fn decompress_to_unknown_size(src: &[u8]) -> Result<Vec<u8>, PyErr> {
@@ -48,7 +50,7 @@ fn decompress_to_unknown_size(src: &[u8]) -> Result<Vec<u8>, PyErr> {
 #[pyo3(signature = (src, uncompressed_size=-1, return_bytearray=false))]
 fn decompress(
     py: Python<'_>,
-    src: Vec<u8>,
+    src: Buffer,
     uncompressed_size: isize,
     return_bytearray: bool,
 ) -> PyResult<Py<PyAny>> {
