@@ -202,6 +202,14 @@ def test_lzo_decompress(lzo: ModuleType, data: str, header: bool, buflen: int, d
     assert hashlib.sha256(lzo.decompress(bytes.fromhex(data), header, buflen)).hexdigest() == digest
 
 
+@pytest.mark.parametrize("source_type", [bytes, bytearray, memoryview])
+@pytest.mark.parametrize(*PARAMS)
+def test_lzo_decompress_source_types(
+    lzo: ModuleType, data: str, header: bool, buflen: int, digest: str, source_type: type
+) -> None:
+    assert hashlib.sha256(lzo.decompress(source_type(bytes.fromhex(data)), header, buflen)).hexdigest() == digest
+
+
 @pytest.mark.benchmark
 @pytest.mark.parametrize(*PARAMS)
 def test_benchmark_lzo_decompress(

@@ -3,27 +3,9 @@ use pyo3::prelude::*;
 use pyo3::pybacked::PyBackedBytes;
 use pyo3::types::{PyByteArray, PyBytes};
 
+use crate::buffer::Buffer;
+
 const MAX_DISCOVER_OUTPUT_SIZE: usize = 1024 * 1024 * 1024;
-
-/// The data to decompress. A ``bytes`` is borrowed and a ``bytearray`` copied in one go; extracting
-/// either as a ``Vec<u8>`` goes through them as a sequence, an int at a time, which costs ~10 ns a
-/// byte and was most of the time of a call. Other sequences of ints are still accepted that way.
-#[derive(FromPyObject)]
-enum Source {
-    Buffer(PyBackedBytes),
-    Sequence(Vec<u8>),
-}
-
-impl std::ops::Deref for Source {
-    type Target = [u8];
-
-    fn deref(&self) -> &[u8] {
-        match self {
-            Source::Buffer(buffer) => buffer,
-            Source::Sequence(sequence) => sequence,
-        }
-    }
-}
 
 fn decompress_block(
     src: &[u8],
@@ -84,7 +66,7 @@ fn decompress_to_unknown_size(src: &[u8], dictionary: &[u8]) -> Result<Vec<u8>, 
 #[pyo3(signature = (src, uncompressed_size=-1, return_bytearray=false, dictionary=None))]
 fn decompress(
     py: Python<'_>,
-    src: Source,
+    src: Buffer,
     uncompressed_size: isize,
     return_bytearray: bool,
     dictionary: Option<PyBackedBytes>,
